@@ -1,0 +1,107 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{  static = true;}PARSER_BEGIN(Peakasso)
+public class Peakasso{  public static void main(String args []) throws ParseException  {    <?parser_name?> parser = new <?parser_name?>(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (<?parser_name?>.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        <?parser_name?>.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Peakasso)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* OPERATORS */{  < PLUS : "+" >| < MINUS : "-" >| < MULTIPLY : "*" >| < DIVIDE : "/" >}TOKEN :{  < CONSTANT : (< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >
+| < ID : ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"])*>
+| < int_lit : ["0"-"9"]+ >
+| < message: ["a"-"z","A"-"Z","0"-"9"," "]* >}
+
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "!!" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
+void peakasso(): {}
+{	"PROGRAM" < ID >";"
+	( canvas_init() | brush_decleration() | drawing() )
+}
+
+void canvas_init(): {}
+{
+  	"CANVAS-INIT-SECTION" ":"
+  	canvas_size_init()";"
+	cursor_pos_init()";"}
+
+void canvas_size_init(): {}
+{
+	"CONST"
+	"CanvasX" "=" < int_lit >";"
+	"CanvasY" "=" < int_lit >";"
+}
+
+void cursor_pos_init(): {}
+{
+	"CursorX" "=" < int_lit >";"
+	"CursorY" "=" < int_lit >";"
+}
+
+void brush_decleration(): {}
+{
+	"BRUSH-DECLARATION-SECTION" ":"
+	variable_def()
+}
+
+void variable_def(): {}
+{
+	"BRUSH" ":"
+	brush_list()
+}
+
+void brush_list(): {}
+{
+	brush_name()
+	|brush_name(),brush_list()
+}
+
+void brush_name(): {}
+{
+	<ID> [= int_lit int_lit ]
+}
+
+void drawing(): {}
+{
+	"DRAWING-SECTION" ":"
+	( renew_stmt() | paint_stmt() | exhibit_stmt() | cursor_move_stmt())
+}
+
+void renew_stmt(): {}
+{
+	"RENEW-BRUSH" ":"
+	"'" < message > "'" < ID >";"
+}
+
+void paint_stmt(): {}
+{
+	"PAINT-CANVAS" 
+	< ID >";"
+}
+
+void exhibit_stmt(): {}
+{
+	"EXHIBIT-CANVAS" ";"
+}
+
+void cursor_move_stmt(): {}
+{
+	"MOVE" 
+	cursor()
+	"TO"
+	expression()
+}
+
+void cursor(): {}
+{
+	"CursorX" | "CursorY"
+}
+
+void expression(): {}
+{
+	term() | expression() (< PLUS > | < MINUS >) term()
+}
+
+void term(): {}
+{
+	"("expression()")" | cursor() | < int_lit >
+}
+  
+
+int one_line() :{}{  sum() ";"  {    return 0;  }| ";"  {    return 1;  }}void sum() :{}{  term()  (    (      < PLUS >    | < MINUS >    )    term()  )*}void term() :{}{  unary()  (    (      < MULTIPLY >    | < DIVIDE >    )    unary()  )*}void unary() :{}{  < MINUS > element()| element()}void element() :{}{  < CONSTANT >| "(" sum() ")"}
