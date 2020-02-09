@@ -1,0 +1,5 @@
+PROGRAM pro;
+CANVAS-INIT-SECTION:
+CONST CanvasX = 3, CanvasY = 5;
+CONST Cursor = 1, CursorY = 1;
+EXHIBIT-CANVAS;

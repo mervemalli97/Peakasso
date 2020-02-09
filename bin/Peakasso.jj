@@ -1,37 +1,156 @@
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */options{  static = true;}PARSER_BEGIN(Peakasso)
-public class Peakasso{  public static void main(String args []) throws ParseException  {    <?parser_name?> parser = new <?parser_name?>(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (<?parser_name?>.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        <?parser_name?>.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Peakasso)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* OPERATORS */{  < PLUS : "+" >| < MINUS : "-" >| < MULTIPLY : "*" >| < DIVIDE : "/" >}TOKEN :{  < CONSTANT : (< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >
+ */
+options
+{
+  LOOKAHEAD = 3;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = true;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = true;
+}
+
+PARSER_BEGIN(Peakasso)
+
+public class Peakasso
+{	
+  	public static void main(String args []) throws ParseException
+  	{
+		JavaCCParser parser;
+    	parser = new JavaCCParser(new java.io.FileInputStream("input.txt"));
+    	try {
+		  	char[][] canvas;
+			String program_id;
+			int canvasX, canvasY, cursorX, cursorY;
+			String[] brush_names;
+			int[] brush_x;
+			int[] brush_y;
+			int brush_count = 0;
+	      	parser.peakasso();
+      	System.out.println("JavaCC Parser:  Java program parsed successfully.");
+    	} catch (ParseException e) {
+	      	System.out.println(e.getMessage());
+	      	System.out.println("JavaCC Parser:  Encountered errors during parse.");
+    	}
+  	}
+  	static int getbrush(String name) {
+		for (int i = 0; i < brush_names.length(); i++) {
+			if ((brush_names[i]).equals(name))
+				return i;
+		}
+		return -1;
+	}
+	static void paintcanvas(String name){
+	  	int b = getbrush(name);
+		for (int i = 0; i < brush_x[b]; i++) {
+			for (int j = 0; j < brush_y[b]; j++) {
+			  	canvas[cursorX+i][cursorY+j] = '*';
+			}
+		}
+	}
+}
+
+PARSER_END(Peakasso)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN : /* OPERATORS */
+{
+  < PLUS : "+" >
+| < MINUS : "-" >
+| < MULTIPLY : "*" >
+| < DIVIDE : "/" >
+}
+
+TOKEN :
+{
+  < CONSTANT : (< DIGIT >)+ >
+| < #DIGIT : [ "0"-"9" ] >
 | < ID : ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"])*>
-| < int_lit : ["0"-"9"]+ >
-| < message: ["a"-"z","A"-"Z","0"-"9"," "]* >}
+| < int_lit : (["0"-"9"])+ >
+| < message: (["a"-"z","A"-"Z","0"-"9"," "])* >
+}
+
 
 SPECIAL_TOKEN :
 {
   <SINGLE_LINE_COMMENT: "!!" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
-}
-void peakasso(): {}
-{	"PROGRAM" < ID >";"
-	( canvas_init() | brush_decleration() | drawing() )
+}
+
+
+void peakasso():
+{
+	String ths;
+}
+{
+	"PROGRAM"
+	ths = < ID > { ths = program_id; }
+	";"
+	(
+	  canvas_init()
+	| brush_decleration()
+	| drawing()
+	)
 }
 
 void canvas_init(): {}
 {
   	"CANVAS-INIT-SECTION" ":"
-  	canvas_size_init()";"
-	cursor_pos_init()";"}
-
-void canvas_size_init(): {}
-{
-	"CONST"
-	"CanvasX" "=" < int_lit >";"
-	"CanvasY" "=" < int_lit >";"
+  	canvas_size_init()
+	cursor_pos_init()
 }
 
-void cursor_pos_init(): {}
+void canvas_size_init(int canvasX, int canvasY, char[][] canvas):
 {
-	"CursorX" "=" < int_lit >";"
-	"CursorY" "=" < int_lit >";"
+  int x,y;
+}
+{
+	"CONST"
+	"CanvasX" "="
+	x = < int_lit > { canvasX = x; } 
+	";"
+	"CanvasY" "="
+	y = < int_lit > { canvasY = y; }
+	";"
+	{
+	  	canvas = new char[canvasX][canvasY];
+		for(int i = 0; i < canvasX; i++) {
+			for (int j = 0; j < canvasY; j++) {
+				canvas[i][j] = ' ';
+			}
+		} 
+	}
+}
+
+void cursor_pos_init():
+{
+  int x,y;
+}
+{
+	"CursorX" "="
+	x = < int_lit > { cursorX = x; }
+	";"
+	"CursorY" "="
+	y = < int_lit > { cursorY = y; }
+	";"
 }
 
 void brush_decleration(): {}
@@ -49,12 +168,23 @@ void variable_def(): {}
 void brush_list(): {}
 {
 	brush_name()
-	|brush_name(),brush_list()
+	|	brush_name()","brush_list()
 }
 
-void brush_name(): {}
+void brush_name():
 {
-	<ID> [= int_lit int_lit ]
+  	String name;
+	int x,y;
+}
+{
+  	name = < ID > { brush_names[brush_count] = name; brush_x[brush_count] = 1; brush_y[brush_count] = 1; brush_count++; }
+	|
+	name = <ID>
+	["="
+	x = < int_lit >
+	y = < int_lit >
+	]
+  	{ brush_names[brush_count] = name; brush_x[brush_count] = 1; brush_y[brush_count] = 1; brush_count++; }
 }
 
 void drawing(): {}
@@ -63,45 +193,74 @@ void drawing(): {}
 	( renew_stmt() | paint_stmt() | exhibit_stmt() | cursor_move_stmt())
 }
 
-void renew_stmt(): {}
+void renew_stmt():
+{
+	String name;
+	int x,y;
+}
 {
 	"RENEW-BRUSH" ":"
-	"'" < message > "'" < ID >";"
+	"'" < message > "'"
+	name = < ID > 
+	x = < int_lit >	{ brush_x[getbrush(name)] = x;}
+	y = < int_lit > { brush_y[getbrush(name)] = y;}
+	";"
 }
 
-void paint_stmt(): {}
+void paint_stmt():
+{
+  String name;
+}
 {
 	"PAINT-CANVAS" 
-	< ID >";"
+	name = < ID > { paintcanvas(name);}
+	";"
+	
 }
 
 void exhibit_stmt(): {}
 {
-	"EXHIBIT-CANVAS" ";"
+	"EXHIBIT-CANVAS" ";" { System.out.println(canvas);}
 }
 
-void cursor_move_stmt(): {}
+void cursor_move_stmt():
+{
+	char xy;
+	int n;
+}
 {
 	"MOVE" 
-	cursor()
+	xy = cursor() 
 	"TO"
-	expression()
+	n = expression() { if (xy == x) cursorX = n; else cursorY = n; }
 }
 
-void cursor(): {}
+char cursor(): {}
 {
-	"CursorX" | "CursorY"
+	"CursorX" { return 'x'; }
+	| "CursorY"	{ return 'y'; }
 }
 
-void expression(): {}
+int expression():
 {
-	term() | expression() (< PLUS > | < MINUS >) term()
+  int r;
 }
-
-void term(): {}
 {
-	"("expression()")" | cursor() | < int_lit >
+	r = term() ((< PLUS > | < MINUS >) term())* { return r; }
 }
-  
 
-int one_line() :{}{  sum() ";"  {    return 0;  }| ";"  {    return 1;  }}void sum() :{}{  term()  (    (      < PLUS >    | < MINUS >    )    term()  )*}void term() :{}{  unary()  (    (      < MULTIPLY >    | < DIVIDE >    )    unary()  )*}void unary() :{}{  < MINUS > element()| element()}void element() :{}{  < CONSTANT >| "(" sum() ")"}
+int term():
+{
+  int r;
+  char xy;
+}
+{
+	"("
+	r = expression()	{ return r; }
+	")"	
+	|
+	xy = cursor()	{ if(xy == 'x') return cursorX; else return cursorY; }
+	|
+	r = < int_lit >	{ return r; }
+}
+
